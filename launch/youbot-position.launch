@@ -1,0 +1,4 @@
+<launch>
+  <node name="position_control" pkg="youbot-position" type="position_control.py" />
+  <node name="PID_X" pkg = "youbot-position" type="PID_X.py" output = "screen" />
+ </launch>
