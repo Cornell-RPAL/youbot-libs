@@ -1,5 +1,5 @@
 <package format="2">
-  <name>youbot-position</name>
+  <name>youbot_position</name>
   <version>0.0.1</version>
   <description>
   This package provides PID control for the youBots.
@@ -12,7 +12,9 @@
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_runtime</build_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
 </package>
