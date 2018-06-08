@@ -5,9 +5,9 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import Twist
 from youbot_position.srv import PositionControl, PositionControlResponse
 
-
 class Controller(object):
   '''A position control service node'''
+  #TODO comment the class itself 
 
   def __init__(self, setpoint_topic='setpoint_x', control_topic='control_x'):
     self.called = False
