@@ -1,4 +1,16 @@
 <launch>
   <node name="position_control" pkg="youbot-position" type="position_control.py" />
-  <node name="PID_X" pkg = "youbot-position" type="PID_X.py" output = "screen" />
+  <node pkg="vicon_bridge" type="vicon_bridge" name="vicon" output="screen">
+		<param name="stream_mode" value="ClientPull" type="str" />
+		<param name="datastream_hostport" value="192.168.1.5:801" type="str" />
+		<!--param name="datastream_hostport" value="vicon:801" type="str" /-->
+		<param name="tf_ref_frame_id" value="/world" type="str" />
+  <node name="PID_X" pkg="pid" type="controller" >
+    <!-- Topic for output of PID controller -->
+      <param name="topic_from_controller" value="x_velocity" />
+      <!-- Topic for state (x-component of pose) -->
+      <param name="topic_from_plant" value="x_pid" />
+      <!-- Topic for setpoint (desired x-component of pose) -->
+      <param name="setpoint_topic" value="setpoint_x" />
+  </node>
  </launch>
