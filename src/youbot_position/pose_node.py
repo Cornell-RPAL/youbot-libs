@@ -20,6 +20,8 @@ def callback(vicon):
 
 def pose_node():
   rospy.init_node('pose_node')
+  # TODO: The topic name here also does not match what the launch file specifies. It's a fine name,
+  # but the two need to be the same.
   pub_x = rospy.Publisher('PID_X/state', Float64, queue_size=10)
   # TODO: The vicon_bridge node uses geometry_msgs/PoseStamped as its message type for the pose
   # topics, so you should use that instead of Float64 here. It might be worthwhile to spend some
