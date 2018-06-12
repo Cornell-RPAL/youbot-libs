@@ -1,10 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
-import rospy
-import rospkg
-import tf2_ros
-from std_msgs.msg import Float64
-from geometry_msgs.msg import PoseStamped
+import rospy, tf2_ros
+from std_msgs.msg import Float64, PoseStamped
 
 class PoseNode(object):
 
@@ -19,7 +16,8 @@ if __name__ == '__main__':
   #create a listener for the vicon pose information
   buffer = tf2_ros.Buffer()
   listen_x = tf2_ros.TransformListener(buffer)
-  transform_x = buffer.lookup_transform('/youbot', '/youbot', rospy.Time(0))
-  P.pub_x.publish(transform_x.transform.translation.x)
+  #should this be rospy.Time()?
+  transform_x = buffer.lookupTransform(vicon.pose.position.x, 'x_pid', rospy.Time(0))
+  self.pub_x.publish(transform_x)
 
   rospy.spin()
