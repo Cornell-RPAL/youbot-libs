@@ -20,5 +20,5 @@ class PoseNode(object):
 if __name__ == '__main__':
   rospy.init_node('pose_node')
   P = PoseNode()
-  P.broadcaster()
-  rospy.spin()
+  while not rospy.is_shutdown(): 
+    P.broadcaster()
