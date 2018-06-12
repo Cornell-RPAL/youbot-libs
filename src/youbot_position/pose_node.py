@@ -11,10 +11,10 @@ class PoseNode(object):
         self.pub_x = rospy.Publisher('x_pid', Float64, queue_size=10)
         #self.pose_sub = rospy.Subscriber('vicon/youbot/pose', PoseStamped, callback)
 
-    def broadcaster():
+    def broadcaster(self):
       buffer = tf2_ros.Buffer()
       listen_x = tf2_ros.TransformListener(buffer)
-      transform_x = buffer.lookup_transform('/youbot', '/youbot', rospy.Time(0))
+      transform_x = buffer.lookup_transform('/base_footprint', '/base_footprint', rospy.Time(0))
       self.pub_x.publish(transform_x.transform.translation.x)
 
 if __name__ == '__main__':
