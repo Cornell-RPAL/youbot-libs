@@ -11,14 +11,14 @@ class PoseNode(object):
         self.pub_x = rospy.Publisher('x_pid', Float64, queue_size=10)
         #self.pose_sub = rospy.Subscriber('vicon/youbot/pose', PoseStamped, callback)
 
+    def broadcaster():
+      buffer = tf2_ros.Buffer()
+      listen_x = tf2_ros.TransformListener(buffer)
+      transform_x = buffer.lookup_transform('/youbot', '/youbot', rospy.Time(0))
+      self.pub_x.publish(transform_x.transform.translation.x)
 
 if __name__ == '__main__':
   rospy.init_node('pose_node')
   P = PoseNode()
-  #create a listener for the vicon pose information
-  buffer = tf2_ros.Buffer()
-  listen_x = tf2_ros.TransformListener(buffer)
-  transform_x = buffer.lookup_transform('/youbot', '/youbot', rospy.Time(0))
-  P.pub_x.publish(transform_x.transform.translation.x)
-
+  P.broadcaster()
   rospy.spin()
