@@ -1,0 +1,12 @@
+<launch>
+  <node name="position_control" pkg="youbot_position" type="position_control.py" />
+  <node name="pose_forward_x" pkg="youbot_position" type="pose_node.py" />
+  <node name="PID_X" pkg="pid" type="controller" >
+    <!-- Topic for output of PID controller -->
+    <param name="topic_from_controller" value="control_x" />
+    <!-- Topic for state (x-component of pose) -->
+    <param name="topic_from_plant" value="x_pid" />
+    <!-- Topic for setpoint (desired x-component of pose) -->
+    <param name="setpoint_topic" value="setpoint_x" />
+  </node>
+</launch>

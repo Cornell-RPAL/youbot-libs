@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find vrep_youbot_plugin)/launch/vrep_youbot.launch"/>
+  <include file="$(find youbot_position)/launch/base.launch"/>
+</launch>
