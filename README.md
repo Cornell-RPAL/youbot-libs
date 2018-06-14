@@ -1,2 +1,2 @@
-# youbot-libs
-General-purpose utilities and libraries for the Kuka youBot
+# youbot-position-control
+A ROS service for position control of the Kuka youBot
