@@ -13,7 +13,7 @@ class Controller(object):
     #, setpoint_topic='setpoint_x', control_topic='control_x'):
     # set called to False initially, and iniialize publishers that publish
     # intended setpoint and the desired velocity for the youBot.
-    self.called = False
+    self.set_velocity = False
     self.setpoint_pub_x = rospy.Publisher('setpoint_x', Float64, queue_size=5, latch=True)
     self.setpoint_pub_y = rospy.Publisher('setpoint_y', Float64, queue_size=5, latch=True)
     self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
@@ -28,26 +28,26 @@ class Controller(object):
                                          self.position_control_service)
     rospy.loginfo("Position control service running!")
 
-  # Executes when service is called; also sets called to True
+  # Executes when service is set_velocity; also sets set_velocity to True
   def position_control_service(self, req):
     '''Callback receiving control service requests'''
     if req.stop:
       null_vector = Twist()
       self.velocity_pub.publish(null_vector)
-      self.called = False
+      self.set_velocity = False
       return PositionControlResponse()
 
     rospy.loginfo("Received request: %s", req)
     self.setpoint_pub_x.publish(req.x)
     self.setpoint_pub_y.publish(req.y)
-    self.called = True
+    self.set_velocity = True
     return PositionControlResponse()
 
-  # Check if service has been called. If so, while listening to control_topic,
+  # Check if service has been set_velocity. If so, while listening to control_topic,
   # set our linear velocity to the data and publish our current velocity.
   def control_callback(self, control):
     '''Callback receiving PID control output'''
-    if self.called:
+    if self.set_velocity:
       self.velocity.linear.x = control.x
       self.velocity.linear.y = control.y
       self.velocity_pub.publish(self.velocity)
