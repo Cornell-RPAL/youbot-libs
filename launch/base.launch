@@ -9,4 +9,12 @@
     <!-- Topic for setpoint (desired x-component of pose) -->
     <param name="setpoint_topic" value="setpoint_x" />
   </node>
+  <node name="PID_Y" pkg="pid" type="controller" >
+    <!-- Topic for output of PID controller -->
+    <param name="topic_from_controller" value="control_y" />
+    <!-- Topic for state (x-component of pose) -->
+    <param name="topic_from_plant" value="y_pid" />
+    <!-- Topic for setpoint (desired x-component of pose) -->
+    <param name="setpoint_topic" value="setpoint_y" />
+  </node>
 </launch>
