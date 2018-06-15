@@ -28,10 +28,16 @@ class Controller(object):
   # Executes when service is called; also sets called to True
   def position_control_service(self, req):
     '''Callback receiving control service requests'''
-    rospy.loginfo("Received request: %s", req)
-    self.setpoint_pub.publish(req.x)
-    self.called = True
-    return PositionControlResponse()
+    if req.x == 9617.0:
+        null_vector = Twist('[0.0, 0.0, 0.0]', '[0.0, 0.0, 0.0]')
+        self.velocity_pub.publish(null_vector)
+        self.called = False
+        return PositionControlResponse()
+    else:
+        rospy.loginfo("Received request: %s", req)
+        self.setpoint_pub.publish(req.x)
+        self.called = True
+        return PositionControlResponse()
 
   # Check if service has been called. If so, while listening to control_topic,
   # set our linear velocity to the data and publish our current velocity.
@@ -39,7 +45,6 @@ class Controller(object):
     '''Callback receiving PID control output'''
     if not self.called:
       return
-
     self.velocity.linear.x = control.data
     self.velocity_pub.publish(self.velocity)
 
