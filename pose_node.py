@@ -11,22 +11,24 @@ class PoseNode(object):
     self.transform_target = transform_target
     self.transform_source = transform_source
     self.pub_x = rospy.Publisher('x_pid', Float64, queue_size=10)
-    self.listen_x = tf.TransformListener()
+    self.pub_y = rospy.Publisher('y_pid', Float64, queue_size=10)
+    self.listen = tf.TransformListener()
 
   def broadcaster(self):
     try:
-      (translation, rotation) = self.listen_x.lookupTransform(self.transform_target,
+      (translation, rotation) = self.listen.lookupTransform(self.transform_target,
                                                               self.transform_source, rospy.Time(0))
       rospy.loginfo("Successfully looked up transform!")
       self.pub_x.publish(translation[0])
-      rospy.loginfo("Successfully published transform info to x_pid!")
+      self.pub_y.publish(translation[1])
+      rospy.loginfo("Successfully published transform info to both PIDS!")
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
       rospy.logerror(
           "Failed to lookup transform between base_link and map! Got error: {}".format(e))
 
   def wait(self):
     rospy.loginfo('Waiting for transform...')
-    self.listen_x.waitForTransform(self.transform_target, self.transform_source, rospy.Time(),
+    self.listen.waitForTransform(self.transform_target, self.transform_source, rospy.Time(),
                                    rospy.Duration(5))
 
 

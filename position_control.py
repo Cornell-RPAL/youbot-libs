@@ -9,17 +9,20 @@ from youbot_position.srv import PositionControl, PositionControlResponse
 class Controller(object):
   '''A position control service node'''
 
-  def __init__(self, setpoint_topic='setpoint_x', control_topic='control_x'):
+  def __init__(self):
+    #, setpoint_topic='setpoint_x', control_topic='control_x'):
     # set called to False initially, and iniialize publishers that publish
     # intended setpoint and the desired velocity for the youBot.
     self.called = False
-    self.setpoint_pub = rospy.Publisher(setpoint_topic, Float64, queue_size=5, latch=True)
+    self.setpoint_pub_x = rospy.Publisher('setpoint_x', Float64, queue_size=5, latch=True)
+    self.setpoint_pub_y = rospy.Publisher('setpoint_y', Float64, queue_size=5, latch=True)
     self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     #  NOTE: I'm storing the velocity as a field because that will make the restructuring easier
     # when the controller is responsible for both X and Y components of the velocity
     self.velocity = Twist()
     # Initialize subscriber that listens to output of PIDs
-    self.control_sub = rospy.Subscriber(control_topic, Float64, self.control_callback)
+    self.control_sub_x = rospy.Subscriber('control_x', Float64, self.control_callback)
+    self.control_sub_y = rospy.Subscriber('control_y', Float64, self.control_callback)
     # Initialize service that will accept requested positions and set PID setpoints to match
     self.control_service = rospy.Service('position_control', PositionControl,
                                          self.position_control_service)
@@ -35,7 +38,8 @@ class Controller(object):
       return PositionControlResponse()
 
     rospy.loginfo("Received request: %s", req)
-    self.setpoint_pub.publish(req.x)
+    self.setpoint_pub_x.publish(req.x)
+    self.setpoint_pub_y.publish(req.y)
     self.called = True
     return PositionControlResponse()
 
@@ -44,7 +48,8 @@ class Controller(object):
   def control_callback(self, control):
     '''Callback receiving PID control output'''
     if self.called:
-      self.velocity.linear.x = control.data
+      self.velocity.linear.x = control.x
+      self.velocity.linear.y = control.y
       self.velocity_pub.publish(self.velocity)
 
 
