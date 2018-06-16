@@ -45,23 +45,24 @@ class Controller(object):
 
   # Check if service has been called. If so, while listening to control_topic,
   # set our linear velocity to the data and publish our current velocity.
-  def control_callback_x(self, control):
+  def control_callback_x(self, control_x):
     '''Callback receiving x PID control output'''
-      self.velocity.linear.x = control.x
     if self.set_velocity:
+      self.velocity.linear.x = control_x.data
       self.fresh_x = True
       if self.fresh_y:
         self.velocity_pub.publish(self.velocity)
         self.fresh_x = False
 
-  def control_callback_y(self, control):
+  def control_callback_y(self, control_y):
     '''Callback receiving y PID control output'''
-      self.velocity.linear.y = control.y
     if self.set_velocity:
+      self.velocity.linear.y = control_y.data
       self.fresh_y = True
       if self.fresh_x:
         self.velocity_pub.publish(self.velocity)
         self.fresh_y = False
+
 
 # Spin on control_service so that if the service goes down, we stop. This is better than doing it on
 # rospy itself because it's more specific (per
