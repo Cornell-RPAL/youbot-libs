@@ -18,7 +18,7 @@ class Controller(object):
     self.fresh_y = False
     self.setpoint_pub_x = rospy.Publisher('setpoint_x', Float64, queue_size=5, latch=True)
     self.setpoint_pub_y = rospy.Publisher('setpoint_y', Float64, queue_size=5, latch=True)
-    self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    self.velocity_pub = rospy.Publisher('mufasa/cmd_vel', Twist, queue_size=10)
     self.velocity = Twist()
     # Initialize subscriber that listens to output of PIDs
     self.control_sub_x = rospy.Subscriber('control_x', Float64, self.control_callback_x)
@@ -57,7 +57,7 @@ class Controller(object):
   def control_callback_y(self, control_y):
     '''Callback receiving y PID control output'''
     if self.set_velocity:
-      self.velocity.linear.y = control_y.data
+      -self.velocity.linear.y = control_y.data
       self.fresh_y = True
       if self.fresh_x:
         self.velocity_pub.publish(self.velocity)
