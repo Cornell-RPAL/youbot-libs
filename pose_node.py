@@ -24,7 +24,7 @@ class PoseNode(object):
       self.pub_pos.publish(str(self._pos))
       rospy.loginfo("Successfully published transform info to both PIDS!")
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-      rospy.logerror("Failed to lookup transform between {} and {}! Got error: {}".format(
+      rospy.logerr("Failed to lookup transform between {} and {}! Got error: {}".format(
           self.transform_source, self.transform_target, e))
 
   def wait(self):
