@@ -8,11 +8,11 @@ from youbot_position.srv import PositionControl, PositionControlResponse
 
 STOP_DIST = 0.1
 
+
 class Controller(object):
   '''A position control service node'''
 
   def __init__(self):
-    # setpoint_topic='setpoint_x', control_topic='control_x'):
     # set called to False initially, and iniialize publishers that publish
     # intended setpoint and the desired velocity for the youBot.
     self.set_velocity = False
@@ -25,13 +25,15 @@ class Controller(object):
     # Initialize subscriber that listens to output of PIDs
     self.control_sub_x = message_filters.Subscriber('control_x', Float64)
     self.control_sub_y = message_filters.Subscriber('control_y', Float64)
-    #Initialize subscriber that listens to position
+    # Initialize subscriber that listens to position
     self.pose_sub_x = message_filters.Subscriber('x_pid', Float64)
     self.pose_sub_y = message_filters.Subscriber('y_pid', Float64)
-    ts_x = message_filters.ApproximateTimeSynchronizer([self.control_sub_x, self.pose_sub_x], 10, 0.1, allow_headerless=True)
-    ts_x.registerCallback(self.control_callback_x)
-    ts_y = message_filters.ApproximateTimeSynchronizer([self.control_sub_y, self.pose_sub_y], 10, 0.1, allow_headerless=True)
-    ts_y.registerCallback(self.control_callback_y)
+    self.ts_x = message_filters.ApproximateTimeSynchronizer(
+        [self.control_sub_x, self.pose_sub_x], 10, 0.1, allow_headerless=True)
+    self.ts_x.registerCallback(self.control_callback_x)
+    self.ts_y = message_filters.ApproximateTimeSynchronizer(
+        [self.control_sub_y, self.pose_sub_y], 10, 0.1, allow_headerless=True)
+    self.ts_y.registerCallback(self.control_callback_y)
     # Initialize service that will accept requested positions and set PID setpoints to match
     self.control_service = rospy.Service('position_control', PositionControl,
                                          self.position_control_service)
@@ -67,7 +69,6 @@ class Controller(object):
         self.velocity_pub.publish(self.velocity)
         self.fresh_x = True
 
-
   def control_callback_y(self, control_y, y_pid, req):
     '''Callback receiving y PID control output'''
     if self.set_velocity:
@@ -80,6 +81,7 @@ class Controller(object):
         self.velocity.linear.y = 0.0
         self.velocity_pub.publish(self.velocity)
         self.fresh_y = True
+
 
 # Spin on control_service so that if the service goes down, we stop. This is better than doing it on
 # rospy itself because it's more specific (per
