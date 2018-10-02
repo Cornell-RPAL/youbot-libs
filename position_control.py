@@ -3,11 +3,11 @@
 from functools import partial
 
 import numpy as np
+
 import rospy
 import tf
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, Float64
-
 from youbot_position.srv import PositionControl, PositionControlResponse
 
 
@@ -77,6 +77,7 @@ class Controller(object):
       return PositionControlResponse()
 
     rospy.logdebug("Received request: %s", req)
+    self.goal = np.array([req.x, req.y])
     self.setpoint_pub['x'].publish(req.x)
     self.setpoint_pub['y'].publish(req.y)
     for controller_name in self.pid_enable_pub:
