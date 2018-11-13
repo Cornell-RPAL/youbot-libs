@@ -1,0 +1,18 @@
+[submodule "vicon_bridge"]
+	path = vicon_bridge
+	url = https://github.com/ethz-asl/vicon_bridge.git
+[submodule "youbot_driver_ros_interface"]
+	path = youbot_driver_ros_interface
+	url = https://github.com/youbot/youbot_driver_ros_interface.git
+[submodule "youbot_driver"]
+	path = youbot_driver
+	url = git://github.com/youbot/youbot_driver.git
+[submodule "youbot_description"]
+	path = youbot_description
+	url = https://github.com/youbot/youbot_description.git
+[submodule "youbot_simulation"]
+	path = youbot_simulation
+	url = https://github.com/mas-group/youbot_simulation.git
+[submodule "pid"]
+	path = pid
+	url = https://bitbucket.org/AndyZe/pid.git
