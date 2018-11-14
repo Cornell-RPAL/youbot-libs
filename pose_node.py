@@ -31,7 +31,7 @@ class PoseNode(object):
     '''Wait for the pose transform to start publishing'''
     rospy.loginfo('Waiting for transform...')
     self.listen.waitForTransform(self.transform_target, self.transform_source, rospy.Time(),
-                                 rospy.Duration(5))
+                                 rospy.Duration(45))
 
 
 if __name__ == '__main__':

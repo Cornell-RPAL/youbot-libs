@@ -35,11 +35,18 @@ class Controller(object):
         'y': rospy.Publisher(setpoint_topic_format.format('y'), Float64, queue_size=5, latch=True)
     }
 
-    self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    self.velocity_pub = rospy.Publisher('Mufasa/cmd_vel', Twist, queue_size=10)
     self.pid_enable_pub = {
         'x': rospy.Publisher(enable_topic_format.format('x'), Bool, queue_size=10),
         'y': rospy.Publisher(enable_topic_format.format('y'), Bool, queue_size=10)
     }
+
+    # Setup transform listener for pose transform
+    self.tf_listener = tf.TransformListener()
+
+    rospy.logwarn('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
+    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(),
+                                      rospy.Duration(15))
 
     # Setup subscribers for control effort
     self.control_sub = {
@@ -54,19 +61,13 @@ class Controller(object):
     # Start with PID disabled
     self.disable_control()
 
-    # Setup transform listener for pose transform
-    self.tf_listener = tf.TransformListener()
-
     # Setup timer to disable control when the setpoint is reached
     self.prox_timer = rospy.Timer(rospy.Duration(0.2), self.pose_callback)
 
     # Initialize service that will accept requested positions and set PID setpoints to match
-    rospy.loginfo('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
-    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(),
-                                      rospy.Duration(15))
     self.control_service = rospy.Service('position_control', PositionControl,
                                          self.position_control_service)
-    rospy.loginfo("Position control service running!")
+    rospy.logwarn("Position control service running!")
 
   # Executes when service is called; sets set_velocity to True
   def position_control_service(self, req):
@@ -76,7 +77,7 @@ class Controller(object):
       self.velocity_pub.publish(Twist())
       return PositionControlResponse()
 
-    rospy.logdebug("Received request: %s", req)
+    rospy.logwarn("Received request: %s", req)
     self.goal = np.array([req.x, req.y])
     self.setpoint_pub['x'].publish(req.x)
     self.setpoint_pub['y'].publish(req.y)
@@ -109,7 +110,7 @@ class Controller(object):
     pose = np.array([pose_x, pose_y])
     diff = pose - self.goal
     dist = diff.dot(diff)
-    rospy.logdebug('Got distance: %s', dist)
+    rospy.logwarn('Got distance: %s', dist)
     if dist <= self.stopping_distance:
       self.disable_control()
       self.velocity_pub.publish(Twist())

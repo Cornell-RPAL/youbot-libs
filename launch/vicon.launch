@@ -8,5 +8,5 @@
   </node>
   <!-- Temporary args for now; this is the VICON -> tf2 package -->
   <node pkg="tf" type="static_transform_publisher" name="pose_broadcaster"
-        args="0 0 -1.698 0 0 0.612 0.791 /vicon/youbot/pose /state 10" />
+        args="0 0 -1.698 0 0 0.612 0.791 /vicon/Mufasa_Base/Mufasa_Base /odom 10" />
 </launch>
