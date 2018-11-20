@@ -17,7 +17,6 @@ class Controller(object):
   def __init__(self,
                global_frame='world',
                youbot_frame='base_link',
-               enable_topic_format='enable_{}',
                setpoint_topic_format='setpoint_{}',
                control_topic_format='control_{}'):
     # Initialize constants
@@ -28,6 +27,7 @@ class Controller(object):
     self.velocity = Twist()
     self.frames = {'target': global_frame, 'source': youbot_frame}
     self.goal = np.zeros(2)
+    self.stopped = True
 
     # Setup publishers for setpoints, velocity, and PID enabling
     self.setpoint_pub = {
@@ -35,11 +35,8 @@ class Controller(object):
         'y': rospy.Publisher(setpoint_topic_format.format('y'), Float64, queue_size=5, latch=True)
     }
 
-    self.velocity_pub = rospy.Publisher('Mufasa/cmd_vel', Twist, queue_size=10)
-    self.pid_enable_pub = {
-        'x': rospy.Publisher(enable_topic_format.format('x'), Bool, queue_size=10),
-        'y': rospy.Publisher(enable_topic_format.format('y'), Bool, queue_size=10)
-    }
+    self.velocity_pub = rospy.Publisher('mufasa/cmd_vel', Twist, queue_size=10)
+    self.pid_enable_pub = rospy.Publisher('pid_enable', Bool, queue_size=10)
 
     # Setup transform listener for pose transform
     self.tf_listener = tf.TransformListener()
@@ -81,17 +78,20 @@ class Controller(object):
     self.goal = np.array([req.x, req.y])
     self.setpoint_pub['x'].publish(req.x)
     self.setpoint_pub['y'].publish(req.y)
-    for controller_name in self.pid_enable_pub:
-      self.pid_enable_pub[controller_name].publish(True)
+    self.stopped = False
+    self.pid_enable_pub.publish(True)
     return PositionControlResponse()
 
   def disable_control(self):
     '''Disable the PID controllers'''
-    for controller_name in self.pid_enable_pub:
-      self.pid_enable_pub[controller_name].publish(False)
+    self.stopped = True
+    self.pid_enable_pub.publish(False)
 
   def control_callback(self, dimension, control):
     '''Callback receiving PID control output'''
+    if self.stopped:
+      return
+
     if dimension == 'x':
       self.velocity.linear.x = control.data
     elif dimension == 'y':
