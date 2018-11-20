@@ -16,11 +16,12 @@ class Controller(object):
 
   def __init__(self,
                global_frame='world',
-               youbot_frame='base_link',
+               youbot_frame='vicon/Mufasa_Base/Mufasa_Base',
                setpoint_topic_format='setpoint_{}',
                control_topic_format='control_{}'):
     # Initialize constants
-    self.stopping_distance = rospy.get_param('stopping_distance', 0.05)
+    self.stopping_distance = rospy.get_param('stopping_distance', 0.15)
+    self.velocity_scale = 0.1
 
     # Initialize system state
     self.fresh_val = {'x': False, 'y': False}
