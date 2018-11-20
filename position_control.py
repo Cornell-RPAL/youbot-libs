@@ -42,7 +42,7 @@ class Controller(object):
     # Setup transform listener for pose transform
     self.tf_listener = tf.TransformListener()
 
-    rospy.logwarn('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
+    rospy.loginfo('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
     self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(),
                                       rospy.Duration(15))
 
@@ -65,7 +65,7 @@ class Controller(object):
     # Initialize service that will accept requested positions and set PID setpoints to match
     self.control_service = rospy.Service('position_control', PositionControl,
                                          self.position_control_service)
-    rospy.logwarn("Position control service running!")
+    rospy.loginfo("Position control service running!")
 
   # Executes when service is called; sets set_velocity to True
   def position_control_service(self, req):
@@ -75,7 +75,7 @@ class Controller(object):
       self.velocity_pub.publish(Twist())
       return PositionControlResponse()
 
-    rospy.logwarn("Received request: %s", req)
+    rospy.logdebug("Received request: %s", req)
     self.goal = np.array([req.x, req.y])
     self.setpoint_pub['x'].publish(req.x)
     self.setpoint_pub['y'].publish(req.y)
@@ -111,7 +111,7 @@ class Controller(object):
     pose = np.array([pose_x, pose_y])
     diff = pose - self.goal
     dist = diff.dot(diff)
-    rospy.logwarn('Got distance: %s', dist)
+    rospy.logdebug('Got distance: %s', dist)
     if dist <= self.stopping_distance:
       self.disable_control()
       self.velocity_pub.publish(Twist())
