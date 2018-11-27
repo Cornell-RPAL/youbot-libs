@@ -1,7 +1,5 @@
 #!/usr/bin/env python2.7
 
-from functools import partial
-
 import numpy as np
 
 import rospy
@@ -10,51 +8,39 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, Float64
 from youbot_position.srv import PositionControl, PositionControlResponse
 
-
 class Controller(object):
   '''A position control service node'''
 
   def __init__(self,
-               global_frame='world',
-               youbot_frame='vicon/Mufasa_Base/Mufasa_Base',
-               setpoint_topic_format='setpoint_{}',
-               control_topic_format='control_{}'):
+               global_frame,
+               youbot_frame,
+               setpoint_topic='setpoint_{}',
+               control_topic='control_{}'):
+
     # Initialize constants
     self.stopping_distance = rospy.get_param('stopping_distance', 0.15)
-    self.velocity_scale = 0.1
 
     # Initialize system state
-    self.fresh_val = {'x': False, 'y': False}
     self.velocity = Twist()
     self.frames = {'target': global_frame, 'source': youbot_frame}
     self.goal = np.zeros(2)
+    self.pose = np.zeros(2)
     self.stopped = True
 
     # Setup publishers for setpoints, velocity, and PID enabling
-    self.setpoint_pub = {
-        'x': rospy.Publisher(setpoint_topic_format.format('x'), Float64, queue_size=5, latch=True),
-        'y': rospy.Publisher(setpoint_topic_format.format('y'), Float64, queue_size=5, latch=True)
-    }
+    self.setpoint_pub = rospy.Publisher(setpoint_topic, Float64, queue_size=5, latch=True)
 
-    self.velocity_pub = rospy.Publisher('mufasa/cmd_vel', Twist, queue_size=10)
+    self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     self.pid_enable_pub = rospy.Publisher('pid_enable', Bool, queue_size=10)
 
     # Setup transform listener for pose transform
     self.tf_listener = tf.TransformListener()
 
     rospy.loginfo('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
-    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(),
-                                      rospy.Duration(15))
+    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(), rospy.Duration(15))
 
     # Setup subscribers for control effort
-    self.control_sub = {
-        'x':
-            rospy.Subscriber(
-                control_topic_format.format('x'), Float64, partial(self.control_callback, 'x')),
-        'y':
-            rospy.Subscriber(
-                control_topic_format.format('y'), Float64, partial(self.control_callback, 'y'))
-    }
+    self.control_sub = rospy.Subscriber(control_topic, Float64, self.control_callback)
 
     # Start with PID disabled
     self.disable_control()
@@ -77,8 +63,7 @@ class Controller(object):
 
     rospy.logdebug("Received request: %s", req)
     self.goal = np.array([req.x, req.y])
-    self.setpoint_pub['x'].publish(req.x)
-    self.setpoint_pub['y'].publish(req.y)
+    self.setpoint_pub.publish(req.x)
     self.stopped = False
     self.pid_enable_pub.publish(True)
     return PositionControlResponse()
@@ -106,10 +91,9 @@ class Controller(object):
 
   def pose_callback(self, _):
     '''Handle stopping if the current pose is close enough to the goal'''
-    (pose_x, pose_y, _), _ = self.tf_listener.lookupTransform(self.frames['target'],
+    (self.pose[0], self.pose[1], _), _ = self.tf_listener.lookupTransform(self.frames['target'],
                                                               self.frames['source'], rospy.Time())
-    pose = np.array([pose_x, pose_y])
-    diff = pose - self.goal
+    diff = self.pose - self.goal
     dist = diff.dot(diff)
     rospy.logdebug('Got distance: %s', dist)
     if dist <= self.stopping_distance:
@@ -122,5 +106,7 @@ class Controller(object):
 # http://wiki.ros.org/rospy/Overview/Services#A.28Waiting_for.29_shutdown)
 if __name__ == "__main__":
   rospy.init_node('position_control')
-  C = Controller()
+  GLOBAL_FRAME = rospy.get_param('~global_frame', 'world')
+  YOUBOT_FRAME = rospy.get_param('~youbot_frame', 'base_link')
+  C = Controller(GLOBAL_FRAME, YOUBOT_FRAME)
   C.control_service.spin()
