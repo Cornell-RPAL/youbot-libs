@@ -15,24 +15,24 @@ class Controller(object):
   def __init__(self,
                global_frame,
                youbot_frame,
-               setpoint_topic='setpoint_{}',
-               control_topic='control_{}'):
+               setpoint_topic='setpoint',
+               control_topic='control'):
 
     # Initialize constants
     self.stopping_distance = rospy.get_param('stopping_distance', 0.15)
+    self.velocity_scale = 0.5
 
     # Initialize system state
-    self.velocity = Twist()
     self.frames = {'target': global_frame, 'source': youbot_frame}
     self.goal = np.zeros(2)
     self.pose = np.zeros(2)
     self.stopped = True
 
-    # Setup publishers for setpoints, velocity, and PID enabling
+    # Setup publishers for setpoints, velocity, error, and PID enabling
     self.setpoint_pub = rospy.Publisher(setpoint_topic, Float64, queue_size=5, latch=True)
-
     self.velocity_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     self.pid_enable_pub = rospy.Publisher('pid_enable', Bool, queue_size=10)
+    self.error_pub = rospy.Publisher('error', Float64, queue_size=10)
 
     # Setup transform listener for pose transform
     self.tf_listener = tf.TransformListener()
@@ -65,8 +65,7 @@ class Controller(object):
 
     rospy.logdebug("Received request: %s", req)
     self.goal = np.array([req.x, req.y])
-    dist = self.get_distance(self.goal)
-    self.setpoint_pub.publish(dist)
+    self.setpoint_pub.publish(0)
     self.stopped = False
     self.pid_enable_pub.publish(True)
     return PositionControlResponse()
@@ -76,21 +75,18 @@ class Controller(object):
     self.stopped = True
     self.pid_enable_pub.publish(False)
 
-  def control_callback(self, dimension, control):
+  def control_callback(self, control):
     '''Callback receiving PID control output'''
     if self.stopped:
       return
 
-    if dimension == 'x':
-      self.velocity.linear.x = control.data
-    elif dimension == 'y':
-      self.velocity.linear.y = control.data
-
-    self.fresh_val[dimension] = True
-    if self.fresh_val['x'] and self.fresh_val['y']:
-      self.velocity_pub.publish(self.velocity)
-      self.fresh_val['x'] = False
-      self.fresh_val['y'] = False
+    # Compute the current velocity vector - straight line to the goal
+    vel_vec = self.goal - self.pose
+    # Scale the velocity vector by the PID output and an arbitrary speed control
+    vel_vec *= control.data * self.velocity_scale
+    velocity = Twist()
+    (velocity.linear.x, velocity.linear.y) = vel_vec
+    self.velocity_pub.publish(velocity)
 
   def get_distance(self, pos):
     '''Utility function to compute the distance from the current pose to a position'''
@@ -98,10 +94,11 @@ class Controller(object):
     return diff.dot(diff)
 
   def pose_callback(self, _):
-    '''Handle stopping if the current pose is close enough to the goal'''
+    '''Handle stopping if the current pose is close enough to the goal and update the error value'''
     (self.pose[0], self.pose[1], _), _ = self.tf_listener.lookupTransform(
         self.frames['target'], self.frames['source'], rospy.Time())
     dist = self.get_distance(self.goal)
+    self.error_pub.publish(dist)
     rospy.logdebug('Got distance: %s', dist)
     if dist <= self.stopping_distance:
       self.disable_control()
