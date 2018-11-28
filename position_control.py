@@ -8,6 +8,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, Float64
 from youbot_position.srv import PositionControl, PositionControlResponse
 
+
 class Controller(object):
   '''A position control service node'''
 
@@ -37,9 +38,10 @@ class Controller(object):
     self.tf_listener = tf.TransformListener()
 
     rospy.loginfo('Waiting for transform from {} to {}...'.format(global_frame, youbot_frame))
-    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(), rospy.Duration(15))
+    self.tf_listener.waitForTransform(self.frames['target'], self.frames['source'], rospy.Time(),
+                                      rospy.Duration(15))
 
-    # Setup subscribers for control effort
+    # Setup subscriber for control effort
     self.control_sub = rospy.Subscriber(control_topic, Float64, self.control_callback)
 
     # Start with PID disabled
@@ -63,7 +65,8 @@ class Controller(object):
 
     rospy.logdebug("Received request: %s", req)
     self.goal = np.array([req.x, req.y])
-    self.setpoint_pub.publish(req.x)
+    dist = self.get_distance(self.goal)
+    self.setpoint_pub.publish(dist)
     self.stopped = False
     self.pid_enable_pub.publish(True)
     return PositionControlResponse()
@@ -89,12 +92,16 @@ class Controller(object):
       self.fresh_val['x'] = False
       self.fresh_val['y'] = False
 
+  def get_distance(self, pos):
+    '''Utility function to compute the distance from the current pose to a position'''
+    diff = self.pose - pos
+    return diff.dot(diff)
+
   def pose_callback(self, _):
     '''Handle stopping if the current pose is close enough to the goal'''
-    (self.pose[0], self.pose[1], _), _ = self.tf_listener.lookupTransform(self.frames['target'],
-                                                              self.frames['source'], rospy.Time())
-    diff = self.pose - self.goal
-    dist = diff.dot(diff)
+    (self.pose[0], self.pose[1], _), _ = self.tf_listener.lookupTransform(
+        self.frames['target'], self.frames['source'], rospy.Time())
+    dist = self.get_distance(self.goal)
     rospy.logdebug('Got distance: %s', dist)
     if dist <= self.stopping_distance:
       self.disable_control()
