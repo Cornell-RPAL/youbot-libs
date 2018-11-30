@@ -1,9 +1,9 @@
 <!-- Launch this in the namespace for the youBot being used, e.g. "mufasa" -->
 <launch>
   <node name="position_control" pkg="youbot_position" type="position_control.py">
-    <param name="global_frame" value="world"> 
+    <param name="global_frame" value="world"/> 
     <!-- Change this for the particular youBot being used -->
-    <param name="youbot_frame" value="vicon/Mufasa_Base/Mufasa_Base">
+    <param name="youbot_frame" value="vicon/Mufasa_Base/Mufasa_Base"/>
   </node>
 
   <node name="PID_scale" pkg="pid" type="controller" >
