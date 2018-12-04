@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7
 
+from math import sqrt
+
 import numpy as np
 
 import rospy
@@ -85,8 +87,8 @@ class Controller(object):
     vel_vec *= -control.data * self.velocity_scale
 
     # Rotate the velocity vector into the frame of the youBot
-    rot_mat = np.array([[np.cos(self.yaw), -np.sin(self.yaw)],
-                       [np.sin(self.yaw), np.cos(self.yaw)]])
+    rot_mat = np.array([[np.cos(self.yaw), -np.sin(self.yaw)], [np.sin(self.yaw),
+                                                                np.cos(self.yaw)]])
 
     vel_vec = np.matmul(rot_mat, vel_vec.T)
 
@@ -97,7 +99,7 @@ class Controller(object):
   def get_distance(self, pos):
     '''Utility function to compute the distance from the current pose to a position'''
     diff = self.pose - pos
-    return diff.dot(diff)
+    return sqrt(diff.dot(diff))
 
   def pose_callback(self, _):
     '''Handle stopping if the current pose is close enough to the goal and update the error value'''
