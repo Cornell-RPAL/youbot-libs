@@ -12,20 +12,18 @@ from youbot_position.srv import PositionControl, PositionControlResponse
 class Controller(object):
   '''A position control service node'''
 
-  def __init__(self,
-               global_frame,
-               youbot_frame,
-               setpoint_topic='setpoint',
+  def __init__(self, global_frame, youbot_frame, setpoint_topic='setpoint',
                control_topic='control'):
 
     # Initialize constants
     self.stopping_distance = rospy.get_param('stopping_distance', 0.15)
-    self.velocity_scale = 0.5
+    self.velocity_scale = 0.1
 
     # Initialize system state
     self.frames = {'target': global_frame, 'source': youbot_frame}
     self.goal = np.zeros(2)
     self.pose = np.zeros(2)
+    self.yaw = 0
     self.stopped = True
 
     # Setup publishers for setpoints, velocity, error, and PID enabling
@@ -82,8 +80,16 @@ class Controller(object):
 
     # Compute the current velocity vector - straight line to the goal
     vel_vec = self.goal - self.pose
+
     # Scale the velocity vector by the PID output and an arbitrary speed control
     vel_vec *= control.data * self.velocity_scale
+
+    # Rotate the velocity vector into the frame of the youBot
+    rot_mat = np.array([[np.cos(self.yaw), -np.sin(self.yaw)],
+                       [np.sin(self.yaw), np.cos(self.yaw)]])
+
+    vel_vec = rot_mat * vel_vec.T
+
     velocity = Twist()
     (velocity.linear.x, velocity.linear.y) = vel_vec
     self.velocity_pub.publish(velocity)
@@ -95,8 +101,9 @@ class Controller(object):
 
   def pose_callback(self, _):
     '''Handle stopping if the current pose is close enough to the goal and update the error value'''
-    (self.pose[0], self.pose[1], _), _ = self.tf_listener.lookupTransform(
+    (self.pose[0], self.pose[1], _), q = self.tf_listener.lookupTransform(
         self.frames['target'], self.frames['source'], rospy.Time())
+    (_, _, self.yaw) = tf.transformations.euler_from_quaternion(q)
     dist = self.get_distance(self.goal)
     self.error_pub.publish(dist)
     rospy.logdebug('Got distance: %s', dist)
