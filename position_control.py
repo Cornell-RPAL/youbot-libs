@@ -82,7 +82,7 @@ class Controller(object):
     vel_vec = self.goal - self.pose
 
     # Scale the velocity vector by the PID output and an arbitrary speed control
-    vel_vec *= control.data * self.velocity_scale
+    vel_vec *= -control.data * self.velocity_scale
 
     # Rotate the velocity vector into the frame of the youBot
     rot_mat = np.array([[np.cos(self.yaw), -np.sin(self.yaw)],
