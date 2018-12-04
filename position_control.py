@@ -88,7 +88,7 @@ class Controller(object):
     rot_mat = np.array([[np.cos(self.yaw), -np.sin(self.yaw)],
                        [np.sin(self.yaw), np.cos(self.yaw)]])
 
-    vel_vec = rot_mat * vel_vec.T
+    vel_vec = np.matmul(rot_mat, vel_vec.T)
 
     velocity = Twist()
     (velocity.linear.x, velocity.linear.y) = vel_vec
