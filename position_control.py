@@ -19,7 +19,7 @@ class Controller(object):
 
     # Initialize constants
     self.stopping_distance = rospy.get_param('stopping_distance', 0.15)
-    self.velocity_scale = 0.1
+    self.velocity_scale = 0.2
 
     # Initialize system state
     self.frames = {'target': global_frame, 'source': youbot_frame}
